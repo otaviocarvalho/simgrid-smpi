@@ -1,0 +1,15 @@
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<platform version="4">
+<!--
+  WARNING:  This <config></config> clause below
+specifies a bogus running-power value, which is ok because
+for this module we don't measure execution times. And this way,
+no warning is generated when running smpirun.
+-->
+    <config>
+        <prop id="smpi/running-power" value="1"/>
+    </config>
+    <AS id="AS0" routing="Full">
+        <cluster id="simple_cluster" prefix="host-" suffix=".me.org" radical="0-1023" speed="200Gf" bw="500MBps" lat="5us"/>
+    </AS>
+</platform>
