@@ -1,4 +1,4 @@
-# SimGrid-samples
+# SimGrid-smpi
 
 Repository for the SimGrid SMPI simulations created on the UFRGS CMP-134 course.
 
