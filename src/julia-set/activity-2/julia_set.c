@@ -13,6 +13,9 @@ int main(int argc, char *argv[])
     int n = 0;
     unsigned char *image_rgb = NULL;
     int num_processes, rank;
+    MPI_Status status;
+    int token = 0;
+    int tag = 171;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_processes);
@@ -29,16 +32,15 @@ int main(int argc, char *argv[])
     int slice_size = n / num_processes;
     int slice_start = (rank % n) * slice_size;
     int slice_end = slice_start + slice_size - 1;
-    image_rgb = malloc(n * (2 * n) * 3 * sizeof(char));
+    image_rgb = malloc(slice_size * (2 * n) * 3 * sizeof(char));
     printf("[Process %d out of %d]: I should compute pixel rows %d to %d, for a total of %d rows\n",
             rank, num_processes, slice_start, slice_end, slice_size);
 
     // Compute pixels for each slice
-    /*for (i = slice_start; i < slice_end; i++) {*/
-    for (i = 0; i < n; i++) {
+    for (i = slice_start; i < slice_end; i++) {
         for (j=0; j < 2*n; j++) {
             compute_julia_pixel(i, j, n, 2*n, TINT_BIAS, &image_rgb[i * n + j]);
-            /*if (rank == 2) {*/
+            /*if (rank == 1) {*/
                 /*printf("pos: %d, i: %d, j: %d, r: %d, g: %d, b:%d\n", i * n + j, i, j,*/
                         /*(int) image_rgb[i * n + j], (int) image_rgb[i * n + j + 1], (int) image_rgb[i * n + j + 2]);*/
             /*}*/
@@ -56,6 +58,30 @@ int main(int argc, char *argv[])
             if (write_result != 0) {
                 fprintf(stderr, "There was an error when writing to output BMP file.\n");
             }
+        }
+
+        // Send message to the next process
+        MPI_Send(&token, 1, MPI_INT, rank + 1, tag, MPI_COMM_WORLD);
+
+        fclose(fp);
+    }
+    else {
+        // Receive message signalling to start processing
+        MPI_Recv(&token, 1, MPI_INT, rank-1, tag, MPI_COMM_WORLD, &status);
+
+        fp = fopen("./julia_set.bmp","a+");
+        int write_result = 0;
+        if (fp != NULL) {
+            write_result += write_bmp_body_slice(fp, image_rgb, slice_start, slice_end, n, 2*n);
+
+            if (write_result != 0) {
+                fprintf(stderr, "There was an error when writing to output BMP file.\n");
+            }
+        }
+
+        if (rank != num_processes-1) {
+            // Send message to the next process
+            MPI_Send(&token, 1, MPI_INT, rank + 1, tag, MPI_COMM_WORLD);
         }
 
         fclose(fp);
