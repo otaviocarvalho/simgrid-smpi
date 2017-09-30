@@ -79,3 +79,28 @@ int write_bmp_body(FILE *f, unsigned char *image_rgb, int width, int height) {
 
     return (ret != width * height * 3);
 }
+
+/* write_bmp_body_slice():
+ *
+ *   In:
+ *      f: A file open for writing ('w')
+ *      image_rgb: RGB image content for writing
+ *      (slice_width_start, slice_width_end): image slice to be written
+ *      (width, height): image dimensions
+ *
+ *   Return:
+ *      0 on success, -1 on failure
+ *
+ */
+int write_bmp_body_slice(FILE *f, unsigned char *image_rgb, int slice_width_start, int slice_width_end, int width, int height) {
+    size_t ret = 0;
+    int i,j = 0;
+
+    for (i = slice_width_start; i < slice_width_end; i++) {
+        for (j = 0; j < height; j++) {
+            ret += fwrite(&image_rgb[i * width + j], sizeof(unsigned char), 3, f);
+        }
+    }
+
+    return (ret != (slice_width_end - slice_width_start) * height * 3);
+}
