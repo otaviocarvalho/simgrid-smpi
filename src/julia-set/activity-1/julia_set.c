@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "julia_pixel.h"
 #include "write_bmp.h"
-#include <mpi.h>
 
 FILE *fp;
 const float TINT_BIAS = 1.0;
