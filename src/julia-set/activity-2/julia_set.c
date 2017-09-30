@@ -34,7 +34,8 @@ int main(int argc, char *argv[])
             rank, num_processes, slice_start, slice_end, slice_size);
 
     // Compute pixels for each slice
-    for (i = slice_start; i < slice_end; i++) {
+    /*for (i = slice_start; i < slice_end; i++) {*/
+    for (i = 0; i < n; i++) {
         for (j=0; j < 2*n; j++) {
             compute_julia_pixel(i, j, n, 2*n, TINT_BIAS, &image_rgb[i * n + j]);
             /*if (rank == 2) {*/
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
         int write_result = 0;
         if (fp != NULL) {
             write_result += write_bmp_header(fp, n, 2*n);
-            write_result += write_bmp_body(fp, image_rgb, n, 2*n);
+            write_result += write_bmp_body_slice(fp, image_rgb, slice_start, slice_end, n, 2*n);
 
             if (write_result != 0) {
                 fprintf(stderr, "There was an error when writing to output BMP file.\n");
