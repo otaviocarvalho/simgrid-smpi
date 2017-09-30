@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include "julia_pixel.h"
 #include "write_bmp.h"
-/*#include <mpi.h>*/
+#include <mpi.h>
 
 FILE *fp;
-const int WIDTH = 4;
-const int HEIGHT = 4;
-const float TINT_BIAS = 2.2;
+const float TINT_BIAS = 1.0;
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +14,7 @@ int main(int argc, char *argv[])
     unsigned char *image_rgb = NULL;
 
     // Validate input
-    if (argc <= 1 || argc >= 3) {
+    if (argc != 2) {
         printf("Error: julia_set expects a single value as its input parameter.\n");
         return -1;
     }
