@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
+#include <sys/time.h>
 #include "julia_pixel.h"
 #include "write_bmp.h"
 
-FILE *fp;
-const float TINT_BIAS = 1.0;
-
 int main(int argc, char *argv[])
 {
+    FILE *fp;
+    const float TINT_BIAS = 1.0;
+
     int i, j = 0;
     int n = 0;
     unsigned char *image_rgb = NULL;
+    struct timeval start, end;
     int num_processes, rank;
     MPI_Status status;
     int token = 0;
@@ -32,7 +34,7 @@ int main(int argc, char *argv[])
     int slice_size = n / num_processes;
     int slice_start = (rank % n) * slice_size;
     int slice_end = slice_start + slice_size - 1;
-    image_rgb = malloc(slice_size * (2 * n) * 3 * sizeof(char));
+    image_rgb = malloc(n * (2 * n) * 3 * sizeof(char));
     printf("[Process %d out of %d]: I should compute pixel rows %d to %d, for a total of %d rows\n",
             rank, num_processes, slice_start, slice_end, slice_size);
 
@@ -47,8 +49,11 @@ int main(int argc, char *argv[])
         }
     }
 
+    gettimeofday(&start, NULL);
+
     // Save to output file
     if (rank == 0) {
+
         fp = fopen("./julia_set.bmp","w+");
         int write_result = 0;
         if (fp != NULL) {
@@ -60,10 +65,11 @@ int main(int argc, char *argv[])
             }
         }
 
+        fclose(fp);
+
         // Send message to the next process
         MPI_Send(&token, 1, MPI_INT, rank + 1, tag, MPI_COMM_WORLD);
 
-        fclose(fp);
     }
     else {
         // Receive message signalling to start processing
@@ -79,15 +85,21 @@ int main(int argc, char *argv[])
             }
         }
 
+        fclose(fp);
+
         if (rank != num_processes-1) {
             // Send message to the next process
             MPI_Send(&token, 1, MPI_INT, rank + 1, tag, MPI_COMM_WORLD);
         }
 
-        fclose(fp);
     }
 
-    free(image_rgb);
+    /*free(image_rgb);*/
+
+    gettimeofday(&end, NULL);
+
+    printf("total rank %d time: %f\n", rank, (end.tv_sec * 1000000.0 + end.tv_usec -
+            start.tv_sec * 1000000.0 + start.tv_usec) / 1000000.0);
 
     MPI_Finalize();
     return 0;
