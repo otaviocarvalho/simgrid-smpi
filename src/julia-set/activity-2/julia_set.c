@@ -5,8 +5,8 @@
 #include "julia_pixel.h"
 #include "write_bmp.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
     FILE *fp;
     const float TINT_BIAS = 1.0;
 
@@ -34,18 +34,14 @@ int main(int argc, char *argv[])
     int slice_size = n / num_processes;
     int slice_start = (rank % n) * slice_size;
     int slice_end = slice_start + slice_size - 1;
-    image_rgb = malloc(n * (2 * n) * 3 * sizeof(char));
+    image_rgb = malloc(slice_size * (2 * n) * 3 * sizeof(char));
     printf("[Process %d out of %d]: I should compute pixel rows %d to %d, for a total of %d rows\n",
             rank, num_processes, slice_start, slice_end, slice_size);
 
     // Compute pixels for each slice
     for (i = slice_start; i < slice_end; i++) {
         for (j=0; j < 2*n; j++) {
-            compute_julia_pixel(i, j, n, 2*n, TINT_BIAS, &image_rgb[i * n + j]);
-            /*if (rank == 1) {*/
-                /*printf("pos: %d, i: %d, j: %d, r: %d, g: %d, b:%d\n", i * n + j, i, j,*/
-                        /*(int) image_rgb[i * n + j], (int) image_rgb[i * n + j + 1], (int) image_rgb[i * n + j + 2]);*/
-            /*}*/
+            compute_julia_pixel(i, j, n, 2*n, TINT_BIAS, &image_rgb[i + j]);
         }
     }
 
@@ -94,13 +90,14 @@ int main(int argc, char *argv[])
 
     }
 
-    /*free(image_rgb);*/
-
     gettimeofday(&end, NULL);
 
     printf("total rank %d time: %f\n", rank, (end.tv_sec * 1000000.0 + end.tv_usec -
             start.tv_sec * 1000000.0 + start.tv_usec) / 1000000.0);
 
     MPI_Finalize();
+
+    free(image_rgb);
+
     return 0;
 }
