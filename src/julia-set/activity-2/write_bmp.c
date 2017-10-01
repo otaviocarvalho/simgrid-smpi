@@ -97,7 +97,7 @@ int write_bmp_body_slice(FILE *f, unsigned char *image_rgb, int slice_width_star
     int i,j = 0;
 
     printf("slice size: %d\n", slice_width_end - slice_width_start);
-    for (i = 0; i < slice_width_end - slice_width_start; i++) {
+    for (i = slice_width_start; i < slice_width_end; i++) {
         for (j = 0; j < height; j++) {
             ret += fwrite(&image_rgb[i * width + j], sizeof(unsigned char), 3, f);
         }
