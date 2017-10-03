@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
             rank, num_processes, slice_start, slice_end, slice_size);
 
     // Compute pixels for each slice
-    for (i = slice_start; i < slice_end; i++) {
+    for (i = slice_start; i < slice_end + 1; i++) {
         for (j=0; j < 2*n; j++) {
             compute_julia_pixel(i, j, n, 2*n, TINT_BIAS, &image_rgb[i * n + j]);
         }
