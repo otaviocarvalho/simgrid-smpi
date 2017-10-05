@@ -1,5 +1,5 @@
-/*CC = mpicc -lm*/
-CC = ~/simgrid/SimGrid-3.13/bin/smpicc -lm
+CC = mpicc -lm
+/*CC = ~/simgrid/SimGrid-3.13/bin/smpicc -lm*/
 CFLAGS = -Wall -Werror -Wmissing-prototypes
 OBJS = julia_set.o julia_pixel.o write_bmp.o
 
