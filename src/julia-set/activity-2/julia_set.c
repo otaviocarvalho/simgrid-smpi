@@ -5,6 +5,8 @@
 #include "julia_pixel.h"
 #include "write_bmp.h"
 
+double start, finish;
+
 int main(int argc, char *argv[]) {
 
     FILE *fp;
@@ -13,7 +15,6 @@ int main(int argc, char *argv[]) {
     int i, j = 0;
     int n = 0;
     unsigned char *image_rgb = NULL;
-    struct timeval start, end;
     int num_processes, rank;
     MPI_Status status;
     int token = 0;
@@ -22,6 +23,8 @@ int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &num_processes);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    start = MPI_Wtime();
 
     // Validate input
     if (argc != 2) {
@@ -44,8 +47,6 @@ int main(int argc, char *argv[]) {
             compute_julia_pixel(i, j, n, 2*n, TINT_BIAS, &image_rgb[i * n + j]);
         }
     }
-
-    gettimeofday(&start, NULL);
 
     // Save to output file
     if (rank == 0) {
@@ -71,17 +72,17 @@ int main(int argc, char *argv[]) {
         // Receive message signalling to start processing
         MPI_Recv(&token, 1, MPI_INT, rank-1, tag, MPI_COMM_WORLD, &status);
 
-        fp = fopen("./julia_set.bmp","a+");
-        int write_result = 0;
-        if (fp != NULL) {
-            write_result += write_bmp_body_slice(fp, image_rgb, slice_start, slice_end, n, 2*n);
+        //fp = fopen("./julia_set.bmp","a+");
+        //int write_result = 0;
+        //if (fp != NULL) {
+        //    write_result += write_bmp_body_slice(fp, image_rgb, slice_start, slice_end, n, 2*n);
+        //
+        //    if (write_result != 0) {
+        //        fprintf(stderr, "There was an error when writing to output BMP file.\n");
+        //    }
+        //}
 
-            if (write_result != 0) {
-                fprintf(stderr, "There was an error when writing to output BMP file.\n");
-            }
-        }
-
-        fclose(fp);
+        //fclose(fp);
 
         if (rank != num_processes-1) {
             // Send message to the next process
@@ -90,12 +91,15 @@ int main(int argc, char *argv[]) {
 
     }
 
-    gettimeofday(&end, NULL);
+    MPI_Barrier(MPI_COMM_WORLD);
 
-    printf("total rank %d time: %f\n", rank, (end.tv_sec * 1000000.0 + end.tv_usec -
-            start.tv_sec * 1000000.0 + start.tv_usec) / 1000000.0);
+    finish = MPI_Wtime();
 
     MPI_Finalize();
+
+    if (rank == 0) {
+        printf("total time: %f\n", finish - start);
+    }
 
     free(image_rgb);
 
